@@ -64,6 +64,11 @@ module.exports = (env, agrv) => {
 					},
 				},
 				{
+					test: /\.(ts|tsx)$/,
+					use: ["ts-loader", "eslint-loader"],
+					exclude: /node_modules/,
+				},
+				{
 					test: /\.(s[ac]ss|css)$/,
 					use: [
 						MiniCssExtractPlugin.loader,
@@ -75,6 +80,7 @@ module.exports = (env, agrv) => {
 							loader: "sass-loader",
 							options: { sourceMap: isDev ? true : false },
 						},
+						"postcss-loader",
 					],
 				},
 				{
