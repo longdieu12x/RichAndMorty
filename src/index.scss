@@ -3,13 +3,13 @@
   margin: 0;
   padding: 0;
   box-sizing: border-box;
-  color: white;
   font-family: Poppins, sans-serif;
   word-spacing: normal;
 }
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
+
 
 @font-face {
   font-family: 'Circular';
@@ -23,6 +23,11 @@ body {
   overflow-y: scroll;
 }
 
+#app {
+  color: white;
+
+}
+
 .ant-tabs-tab-btn {
   color: white;
 }
@@ -30,3 +35,4 @@ body {
 .ant-divider {
   border-color: white;
 }
+

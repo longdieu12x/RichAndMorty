@@ -69,7 +69,7 @@ const App = () => {
 	}, [chainId]);
 
 	return (
-		<div className="p-20 w-100 h-[100%] bg-black text-center">
+		<div className="p-20 w-100 h-[100%] bg-black text-center" id="app">
 			<h2 className="text-white text-2xl font-bold">Moralis Hello World! 🚀</h2>
 			<div className="flex justify-center items-center mt-2">
 				<RenderIf isTrue={!isAuthenticated}>
