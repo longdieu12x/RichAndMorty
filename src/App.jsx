@@ -23,7 +23,7 @@ const App = () => {
 			await authenticate()
 				.then(function (user) {
 					setUserAddress(user.get("ethAddress"));
-					localStorage.setItem("metamask-address", user.get("ethAddress"));
+					sessionStorage.setItem("metamask-address", user.get("ethAddress"));
 				})
 				.catch(function (error) {
 					console.log(error);
@@ -33,17 +33,24 @@ const App = () => {
 
 	const logOut = async () => {
 		await logout();
-		localStorage.removeItem("metamask-address");
+		sessionStorage.removeItem("metamask-address");
 	};
 
 	const onChange = () => {};
 
 	useEffect(() => {
+		if (!sessionStorage.getItem("metamask-address")) {
+			logout();
+		}
+	}, []);
+
+	useEffect(() => {
 		if (account) {
-			localStorage.setItem("metamask-address", account);
+			console.log("Do");
+			sessionStorage.setItem("metamask-address", account);
 			setUserAddress(account);
 		} else {
-			setUserAddress(localStorage.getItem("metamask-address"));
+			setUserAddress(sessionStorage.getItem("metamask-address"));
 		}
 	}, [account]);
 
@@ -62,9 +69,9 @@ const App = () => {
 		}
 		if (chainId) {
 			console.log(chainId);
-			localStorage.setItem("metamask-chainId", chainId);
+			sessionStorage.setItem("metamask-chainId", chainId);
 		} else {
-			localStorage.setItem("metamask-chainId", "0x61");
+			sessionStorage.setItem("metamask-chainId", "0x61");
 		}
 	}, [chainId]);
 
@@ -94,7 +101,7 @@ const App = () => {
 			<RenderIf isTrue={isAuthenticated}>
 				<div className="flex justify-center items-center mt-2 mb-2">
 					<p className="text-base text-white">{`You are using chain: ${parseInt(
-						chainId || localStorage.getItem("metamask-chainId"),
+						chainId || sessionStorage.getItem("metamask-chainId"),
 						16
 					)}`}</p>
 				</div>

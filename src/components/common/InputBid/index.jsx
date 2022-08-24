@@ -2,7 +2,7 @@ import React from "react";
 import { Input } from "antd";
 import "./index.scss";
 
-const InputBid = ({ placeholder, inputHandler, width, height }) => {
+const InputBid = ({ placeholder, inputHandler, width, height, value }) => {
 	return (
 		<div
 			id="input-bidder"
@@ -10,7 +10,7 @@ const InputBid = ({ placeholder, inputHandler, width, height }) => {
 				height ? `h-[${height}]` : "h-[40px]"
 			}`}
 		>
-			<Input placeholder={placeholder} onChange={inputHandler} />
+			<Input value={value} placeholder={placeholder} onChange={inputHandler} />
 		</div>
 	);
 };

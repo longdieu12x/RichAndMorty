@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from "react";
 import baseImg from "../../assets/image/5.jpg";
 import { Row, Col, Image, Space, Divider } from "antd";
-import { useMoralisQuery } from "react-moralis";
+import { useMoralisQuery, useMoralis } from "react-moralis";
 import { makeQueryBuilder } from "../../utils/moralis";
 import InputBid from "../common/InputBid";
 import ButtonBid from "../common/ButtonBid";
@@ -9,11 +9,12 @@ import Helper from "../../utils/Helper";
 import { ethers } from "ethers";
 import { nftAddress, nftAbi } from "../../configs/contracts/nft";
 import { auctionAddress, auctionAbi } from "../../configs/contracts/auction";
+import { tokenAddress, tokenAbi } from "../../configs/contracts/token";
 import RenderIf from "../../configs/RenderIf";
+import { getProvider } from "../../utils/signer";
 import { message } from "antd";
 import CountdownClock from "../Countdown";
 import axios from "axios";
-import { getSigner } from "../../utils/signer";
 import moment from "moment";
 
 const Auction = () => {
@@ -21,7 +22,16 @@ const Auction = () => {
 	const [imgLoading, setImgLoading] = useState(false);
 	const [entranceFee, setEntranceFee] = useState(0);
 	const [noHistory, setNoHistory] = useState(false);
+	const [bidValue, setBidValue] = useState();
+	const [currentBid, setCurrentBid] = useState(0);
+	const [expired, setExpired] = useState(false);
+	const [isBidding, setIsBidding] = useState(false);
+	const [provider, setProvider] = useState({
+		data: null,
+		isSigner: false,
+	});
 
+	const { enableWeb3, isAuthenticated, authenticate } = useMoralis();
 	const {
 		data: openData,
 		error: openError,
@@ -33,7 +43,23 @@ const Auction = () => {
 		{
 			live: true,
 			onLiveUpdate: (entity, all) => {
-				setNoHistory(false);
+				console.log("Update entity", entity.attributes.nftID);
+				if (noHistory) {
+					setNoHistory(false);
+				}
+				if (expired) {
+					setExpired(false);
+				}
+				return [entity, ...all];
+			},
+			onLiveEnter: (entity, all) => {
+				console.log("Enter entity", entity.attributes.nftID);
+				if (noHistory) {
+					setNoHistory(false);
+				}
+				if (expired) {
+					setExpired(false);
+				}
 				return [entity, ...all];
 			},
 		}
@@ -46,7 +72,19 @@ const Auction = () => {
 		"AuctionClosed",
 		(query) => query.descending("createdAt").limit(1),
 		[],
-		{ live: true, onLiveUpdate: (entity, all) => [entity, ...all] }
+		{
+			live: true,
+			onLiveUpdate: (entity, all) => {
+				console.log("Update entity", entity.attributes.nftID);
+
+				return [entity, ...all];
+			},
+			onLiveEnter: (entity, all) => {
+				console.log("Enter entity", entity.attributes.nftID);
+
+				return [entity, ...all];
+			},
+		}
 	);
 	const {
 		data: bidData,
@@ -56,19 +94,38 @@ const Auction = () => {
 		"AuctionPlaceBid",
 		(query) =>
 			query
+				.descending("bidPrice")
 				.descending("createdAt")
 				.equalTo("nftID", openData[0]?.attributes?.nftID)
 				.limit(3),
 		[openData],
 		{
 			live: true,
-			onLiveUpdate: (entity, all) => [entity, ...all].splice(0, 3),
+			onLiveUpdate: (entity, all) => {
+				console.log("UPDATE BID", entity.attributes.bidPrice);
+				let hasItem = false;
+				all.forEach((item) => {
+					if (item.attributes.bidPrice == entity.attributes.bidPrice) {
+						hasItem = true;
+					}
+				});
+				return hasItem ? [...all].splice(0, 3) : [entity, ...all].splice(0, 3);
+			},
+			onLiveEnter: (entity, all) => {
+				console.log("ENTER BID");
+				let hasItem = false;
+				all.forEach((item) => {
+					if (item.attributes.bidPrice == entity.attributes.bidPrice) {
+						hasItem = true;
+					}
+				});
+				return hasItem ? [...all].splice(0, 3) : [entity, ...all].splice(0, 3);
+			},
 		}
 	);
-
 	async function getNFTData(id) {
 		const nftId = id;
-		const signer = await getSigner();
+		const signer = provider.data;
 		const nftContract = new ethers.Contract(nftAddress, nftAbi, signer);
 		const auctionContract = new ethers.Contract(
 			auctionAddress,
@@ -86,6 +143,68 @@ const Auction = () => {
 			message.success("Get nft image successfully!");
 		}
 	}
+
+	async function handleBid() {
+		try {
+			setIsBidding(true);
+			if (!bidValue) {
+				message.error("Please input bid's value!");
+				return;
+			}
+			if (expired) {
+				message.error("It is not time to bid!");
+				return;
+			}
+			if (parseInt(bidValue) < parseInt(ethers.utils.formatEther(currentBid))) {
+				message.error(
+					"You have to bid value that is greater than current bid!"
+				);
+				return;
+			}
+			const signer = provider.data;
+			if (provider.isSigner == false) {
+				await authenticate();
+			}
+
+			const tokenContract = new ethers.Contract(tokenAddress, tokenAbi, signer);
+			const approveTx = await tokenContract.approve(
+				auctionAddress,
+				ethers.utils.parseEther(bidValue.toString())
+			);
+			await approveTx.wait();
+			const auctionContract = new ethers.Contract(
+				auctionAddress,
+				auctionAbi,
+				signer
+			);
+			const fee = await auctionContract.entranceFee();
+			const tx = await auctionContract.placeBid(
+				ethers.utils.parseEther(bidValue.toString()),
+				{
+					value: fee,
+				}
+			);
+			await tx.wait();
+			setBidValue();
+		} catch (e) {
+			console.log(e);
+		} finally {
+			setIsBidding(false);
+		}
+	}
+
+	useEffect(() => {
+		(async () => {
+			if (isAuthenticated) {
+				const web3Provider = await enableWeb3();
+				const signer = web3Provider.getSigner();
+				setProvider({ ...provider, data: signer, isSigner: true });
+			} else {
+				setProvider({ ...provider, data: getProvider(), isSigner: false });
+			}
+		})();
+	}, [isAuthenticated]);
+
 	useEffect(() => {
 		(async () => {
 			setImgLoading(true);
@@ -97,15 +216,30 @@ const Auction = () => {
 			} catch (e) {
 				// that means it is burned
 				message.error("Get nft image failed!");
-				const nearNftData = await makeQueryBuilder("AuctionClosed")
-					.descending("createdAt")
-					.greaterThan("finalPrice", "0")
-					.limit(1)
-					.find();
-				if (nearNftData.length == 0) {
-					setNoHistory(true);
+				if (
+					openData.length > 0 &&
+					openData[0].attributes.nftID == closeData[0].attributes.nftID
+				) {
+					const nearNftData = await makeQueryBuilder("AuctionClosed")
+						.descending("createdAt")
+						.greaterThan("finalPrice", "0")
+						.limit(1)
+						.find();
+					if (nearNftData.length == 0) {
+						setNoHistory(true);
+					} else {
+						await getNFTData(nearNftData[0]?.attributes?.nftID);
+					}
 				} else {
-					await getNFTData(nearNftData[0]?.attributes?.nftID);
+					console.log("Here");
+					message.info(
+						"NFT metadata is not available, please back in minutes!"
+					);
+					setNftData({
+						...nftData,
+						image: baseImg,
+						name: "Minh Dang Token",
+					});
 				}
 			} finally {
 				setImgLoading(false);
@@ -128,6 +262,12 @@ const Auction = () => {
 		}
 	}, [closeData]);
 
+	useEffect(() => {
+		if (bidData.length > 0) {
+			setCurrentBid(bidData[0].attributes.bidPrice);
+		}
+	}, [bidData]);
+
 	return (
 		<>
 			<RenderIf
@@ -148,23 +288,19 @@ const Auction = () => {
 						<Space size={12} direction="vertical" className="w-full">
 							<p className="text-base font-medium text-white">
 								<span className="text-[#999]">Ends on</span>{" "}
-								{openLoading && openData.length != 0
-									? Helper.optionsDateJs(
-											openData[0]?.attributes?.endTime || 0,
-											{ month: "long", day: "numeric", year: "numeric" },
-											"UTC"
-									  )
-									: Helper.optionsDateJs(
-											moment().toDate().getTime(),
-											{ month: "long", day: "numeric", year: "numeric" },
-											"UTC"
-									  )}
+								{!openLoading && openData.length != 0
+									? moment(
+											parseInt(`${openData[0]?.attributes?.endTime}000` || 0)
+									  ).format("LL")
+									: moment().format("LL")}
 							</p>
 							<h2 className="text-3xl text-white font-bold">{nftData.name}</h2>
 							<div className="flex justify-between items-center">
 								<div>
 									<p className="text-[24px] text-[#72ec9c] font-bold">
-										{bidData.length == 0 ? 0 : bidData[0].attributes.bidPrice}{" "}
+										{Helper.numberToCurrencyStyle(
+											ethers.utils.formatEther(currentBid)
+										)}{" "}
 										MDT
 									</p>
 									<p className="text-base font-medium text-[#999]">
@@ -173,7 +309,7 @@ const Auction = () => {
 								</div>
 								<div>
 									<p className="text-[24px] text-[#72ec9c] font-bold">
-										{entranceFee} ETH
+										{Helper.numberToCurrencyStyle(entranceFee)} ETH
 									</p>
 									<p className="text-base font-medium text-[#999] whitespace-nowrap underline underline-offset-8">
 										Entrance Fee
@@ -189,6 +325,9 @@ const Auction = () => {
 										)}
 										messageWarning="Expired time, you can't bid at this time!"
 										className="text-[24px] text-white font-bold"
+										func={() => {
+											setExpired(true);
+										}}
 									/>
 								</RenderIf>
 								<RenderIf isTrue={!openLoading && openData.length == 0}>
@@ -199,8 +338,15 @@ const Auction = () => {
 								</p>
 							</div>
 							<div className="flex justify-between wrap">
-								<InputBid />
-								<ButtonBid text={"Place Bid"} />
+								<InputBid
+									inputHandler={(e) => setBidValue(e.target.value)}
+									value={bidValue}
+								/>
+								<ButtonBid
+									text={"Place Bid"}
+									clickHandler={handleBid}
+									loading={isBidding}
+								/>
 							</div>
 							<Divider />
 							<Space direction="vertical" size={12} className="w-full">
@@ -213,7 +359,7 @@ const Auction = () => {
 											{Helper.shortTextAdress(item.attributes.bidder)}
 										</span>
 										<span className="text-[#72ec9c] text-base font-medium">
-											{item.attributes.bidPrice} MDT
+											{ethers.utils.formatEther(item.attributes.bidPrice)} MDT
 										</span>
 									</div>
 								))}

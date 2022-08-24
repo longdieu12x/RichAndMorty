@@ -14,7 +14,13 @@ import { message } from "antd";
 
  */
 
-function CountdownClock({ expiredTime, className, style, messageWarning }) {
+function CountdownClock({
+	expiredTime,
+	className,
+	style,
+	messageWarning,
+	func,
+}) {
 	useEffect(() => {
 		// Update the count down every 1 second
 
@@ -52,7 +58,9 @@ function CountdownClock({ expiredTime, className, style, messageWarning }) {
 				if (messageWarning) {
 					message.warning(`${messageWarning}`);
 				}
-
+				if (func) {
+					func();
+				}
 				clearInterval(timerId);
 
 				document.getElementById("timer").innerHTML = "EXPIRED";
