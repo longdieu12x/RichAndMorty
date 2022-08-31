@@ -15,65 +15,12 @@ const App = () => {
 		account,
 		logout,
 	} = useMoralis();
-	const { chainId, switchNetwork } = useChain();
+	console.log(isAuthenticated, user, account);
 	const [userAddress, setUserAddress] = useState("");
 
-	const login = async () => {
-		if (!isAuthenticated) {
-			await authenticate()
-				.then(function (user) {
-					setUserAddress(user.get("ethAddress"));
-					sessionStorage.setItem("metamask-address", user.get("ethAddress"));
-				})
-				.catch(function (error) {
-					console.log(error);
-				});
-		}
-	};
+	const login = async () => {};
 
-	const logOut = async () => {
-		await logout();
-		sessionStorage.removeItem("metamask-address");
-	};
-
-	const onChange = () => {};
-
-	useEffect(() => {
-		if (!sessionStorage.getItem("metamask-address")) {
-			logout();
-		}
-	}, []);
-
-	useEffect(() => {
-		if (account) {
-			console.log("Do");
-			sessionStorage.setItem("metamask-address", account);
-			setUserAddress(account);
-		} else {
-			setUserAddress(sessionStorage.getItem("metamask-address"));
-		}
-	}, [account]);
-
-	useEffect(() => {
-		if (chainId && chainId != 97) {
-			if (
-				window.confirm(
-					"You are not on Binance Smart Chain Testnet, do you want to change to BSC testnet"
-				) == true
-			) {
-				switchNetwork(97);
-			} else {
-				logOut();
-			}
-			switchNetwork(4);
-		}
-		if (chainId) {
-			console.log(chainId);
-			sessionStorage.setItem("metamask-chainId", chainId);
-		} else {
-			sessionStorage.setItem("metamask-chainId", "0x61");
-		}
-	}, [chainId]);
+	const logOut = async () => {};
 
 	return (
 		<div className="p-20 w-100 h-[100%] bg-black text-center" id="app">
@@ -100,14 +47,11 @@ const App = () => {
 			</div>
 			<RenderIf isTrue={isAuthenticated}>
 				<div className="flex justify-center items-center mt-2 mb-2">
-					<p className="text-base text-white">{`You are using chain: ${parseInt(
-						chainId || sessionStorage.getItem("metamask-chainId"),
-						16
-					)}`}</p>
+					<p className="text-base text-white">{`You are using chain: `}</p>
 				</div>
 			</RenderIf>
 			<>
-				<Tabs defaultActiveKey="1" onChange={onChange}>
+				<Tabs defaultActiveKey="1" onChange={() => {}}>
 					<TabPane tab="Auction" key="1">
 						<Auction />
 					</TabPane>
