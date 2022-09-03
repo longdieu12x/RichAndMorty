@@ -59,7 +59,10 @@ module.exports = (env, agrv) => {
 						// Nhận vào một object hoặc một array chứa thông tin loader
 						loader: "babel-loader",
 						options: {
-							presets: ["@babel/preset-env", "@babel/preset-react"],
+							presets: [
+								"@babel/preset-env",
+								["@babel/preset-react", { runtime: "automatic" }],
+							],
 						},
 					},
 				},
@@ -116,6 +119,7 @@ module.exports = (env, agrv) => {
 			alias: {
 				"@": path.resolve("src"),
 				"@@": path.resolve(),
+				redux: require.resolve("redux"),
 			},
 		},
 		output: {
@@ -139,6 +143,7 @@ module.exports = (env, agrv) => {
 			hot: true,
 			// watchContentBase: true,
 			// historyApiFallback: true,
+			liveReload: false,
 			open: true,
 		},
 		plugins: isDev ? basePlugins : prodPlugins,

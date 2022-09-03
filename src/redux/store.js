@@ -3,8 +3,11 @@ import { combineReducers } from "redux";
 import logger from "redux-logger";
 import { persistStore, persistReducer } from "redux-persist";
 import storage from "redux-persist/lib/storage";
+import { api } from "../api";
 
-const appReducer = combineReducers({});
+const appReducer = combineReducers({
+	[api.reducerPath]: api.reducer,
+});
 
 const rootReducer = (state, action) => {
 	// if (action.type === "wallet/removeWallet") {
@@ -18,7 +21,7 @@ const persistConfig = {
 	key: "root",
 	version: 1,
 	storage,
-	blacklist: [],
+	blacklist: [api.reducerPath],
 };
 
 const persistedReducer = persistReducer(persistConfig, rootReducer);
@@ -26,7 +29,9 @@ const persistedReducer = persistReducer(persistConfig, rootReducer);
 const store = configureStore({
 	reducer: persistedReducer,
 	middleware: (getDefaultMiddleware) =>
-		getDefaultMiddleware({ serializableCheck: false }).concat(logger),
+		getDefaultMiddleware({
+			serializableCheck: false,
+		}).concat(api.middleware),
 	devTools: true,
 });
 
