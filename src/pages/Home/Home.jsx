@@ -1,19 +1,20 @@
 import React, { useState } from "react";
 import { useGetAllCharactersQuery } from "../../api/characterApi";
 import Search from "../../components/common/atoms/Search";
-import { Select, Space, Card as C } from "antd";
+import { Select, Space } from "antd";
 import StatusConfig from "../../configs/Status";
 import "./Home.scss";
 import Card from "../../components/common/atoms/Card";
 import Pagination from "../../components/common/molecules/Pagination";
 import Gender from "../../configs/Gender";
+import EndObject from "../../configs/EndObject";
 //Display character
-const { Meta } = C;
 const Home = () => {
 	const [params, setParams] = useState({
 		page: 1,
 		status: Object.keys(StatusConfig)[0],
 		gender: Object.keys(Gender)[0],
+		name: "",
 	});
 	const { data, isFetching, isLoading } = useGetAllCharactersQuery(params);
 	console.log(data);
@@ -22,11 +23,23 @@ const Home = () => {
 	};
 
 	const selectStatusHandler = (item) => {
-		setParams({ ...params, status: item });
+		if (item == EndObject) {
+			setParams({ ...params, status: null });
+		} else {
+			setParams({ ...params, status: item });
+		}
 	};
 
 	const selectGenderHandler = (item) => {
-		setParams({ ...params, gender: item });
+		if (item == EndObject) {
+			setParams({ ...params, gender: null });
+		} else {
+			setParams({ ...params, gender: item });
+		}
+	};
+
+	const searchChangeHandler = (e) => {
+		setParams({ ...params, name: e.target.value });
 	};
 
 	const coverFn = (source) => <img alt="example" src={source} />;
@@ -34,7 +47,7 @@ const Home = () => {
 		<div id="home">
 			<Space direction="vertical" size={40}>
 				<div className="flex justify-between]">
-					<Search />
+					<Search changeHandler={searchChangeHandler} />
 					<Select
 						defaultValue={Object.keys(StatusConfig)[0]}
 						onChange={selectStatusHandler}
@@ -65,7 +78,10 @@ const Home = () => {
 							>
 								<div className="flex justify-center flex-col">
 									<h3 className="text-[14px] font-bold">{item.name}</h3>
-									<p className="text-xs">{item.species}</p>
+									<div className="flex justify-between flex-wrap">
+										<span className="text-xs">{item.species}</span>
+										<span className="text-xs font-bold">{item.type}</span>
+									</div>
 								</div>
 							</Card>
 						))}

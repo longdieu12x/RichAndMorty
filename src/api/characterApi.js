@@ -3,11 +3,13 @@ import { api } from ".";
 const productApi = api.injectEndpoints({
 	endpoints: (build) => ({
 		getAllCharacters: build.query({
-			query: (params) => ({
-				url: `/character`,
-				method: "GET",
-				params,
-			}),
+			query: (params) => {
+				return {
+					url: `/character`,
+					method: "GET",
+					params,
+				};
+			},
 			providesTags: (result, error, id) => {
 				if (result?.results?.length > 0) {
 					return [

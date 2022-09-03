@@ -3,7 +3,8 @@ import "./index.scss";
 import React from "react";
 
 const Search = (props) => {
-	return <Input.Search {...props} />;
+	const { changeHandler } = props;
+	return <Input.Search {...props} onChange={changeHandler} />;
 };
 
 export default Search;
