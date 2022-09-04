@@ -1,11 +1,11 @@
 import { api } from ".";
 
-const characterApi = api.injectEndpoints({
+const locationApi = api.injectEndpoints({
 	endpoints: (build) => ({
-		getAllCharacters: build.query({
+		getAllLocations: build.query({
 			query: (params) => {
 				return {
-					url: `character`,
+					url: `location`,
 					method: "GET",
 					params,
 				};
@@ -13,21 +13,21 @@ const characterApi = api.injectEndpoints({
 			providesTags: (result, error, id) => {
 				if (result?.results?.length > 0) {
 					return [
-						{ type: "Character", id: "LIST" },
+						{ type: "Location", id: "LIST" },
 						...result.results.map((item) => ({
-							type: "Character",
+							type: "Location",
 							id: item?.id,
 						})),
 					];
 				} else {
-					return [{ type: "Character", id: "LIST " }];
+					return [{ type: "Location", id: "LIST " }];
 				}
 			},
 		}),
-		getCharacterDetail: build.query({
+		getLocationDetail: build.query({
 			query: ({ id }) => {
 				return {
-					url: `character/${id}`,
+					url: `location/${id}`,
 					method: "GET",
 				};
 			},
@@ -35,5 +35,5 @@ const characterApi = api.injectEndpoints({
 	}),
 });
 
-export const { useGetAllCharactersQuery, useGetCharacterDetailQuery } =
-	characterApi;
+export const { useGetAllLocationsQuery, useGetLocationDetailQuery } =
+	locationApi;

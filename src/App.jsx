@@ -9,7 +9,7 @@ import { routes } from "./routes";
 
 const App = () => {
 	return (
-		<div className="p-[24px] mx-[auto] w-100 h-[100%]" id="app">
+		<div className="px-[24px] mx-[auto] w-100 h-[100%]" id="app">
 			<BrowserRouter>
 				<React.Suspense
 					fallback={
@@ -26,17 +26,17 @@ const App = () => {
 										<Route
 											key={key}
 											path={routes[key].path}
+											exact={routes[key]?.exact || false}
 											element={
 												<PrivateRoute>{routes[key].component} </PrivateRoute>
 											}
 										/>
 									);
 								} else if (!routes[key].isAuth) {
-									console.log(routes[key]);
-
 									return (
 										<Route
 											key={key}
+											exact={routes[key]?.exact || false}
 											path={routes[key].path}
 											element={
 												<PublicRoute>{routes[key].component} </PublicRoute>

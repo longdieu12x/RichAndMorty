@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { useGetAllCharactersQuery } from "../../api/characterApi";
 import Search from "../../components/common/atoms/Search";
 import { Select, Space } from "antd";
@@ -8,18 +8,25 @@ import Card from "../../components/common/atoms/Card";
 import Pagination from "../../components/common/molecules/Pagination";
 import Gender from "../../configs/Gender";
 import EndObject from "../../configs/EndObject";
+import Modal from "../../components/common/molecules/Modal";
+import CharacterContentModal from "../../components/common/organisms/CharacterContentModal";
 //Display character
 const Home = () => {
+	const [isVisible, setIsVisible] = useState(false);
 	const [params, setParams] = useState({
 		page: 1,
 		status: Object.keys(StatusConfig)[0],
 		gender: Object.keys(Gender)[0],
 		name: "",
 	});
+	const [idSelect, setIdSelect] = useState();
 	const { data, isFetching, isLoading } = useGetAllCharactersQuery(params);
-	console.log(data);
 	const pageHandler = (item) => {
 		setParams({ ...params, page: item });
+	};
+
+	const cardHandler = (item) => {
+		setIdSelect(item);
 	};
 
 	const selectStatusHandler = (item) => {
@@ -43,6 +50,13 @@ const Home = () => {
 	};
 
 	const coverFn = (source) => <img alt="example" src={source} />;
+
+	useEffect(() => {
+		if (idSelect) {
+			console.log(idSelect);
+			setIsVisible(true);
+		}
+	}, [idSelect]);
 	return (
 		<div id="home">
 			<Space direction="vertical" size={40}>
@@ -75,6 +89,7 @@ const Home = () => {
 							<Card
 								{...{ hoverable: true, cover: coverFn(item.image) }}
 								key={item?.id}
+								onClick={() => cardHandler(item?.id)}
 							>
 								<div className="flex justify-center flex-col">
 									<h3 className="text-[14px] font-bold">{item.name}</h3>
@@ -95,6 +110,11 @@ const Home = () => {
 					/>
 				</div>
 			</Space>
+			<>
+				<Modal isVisible={isVisible} setIsVisible={setIsVisible}>
+					<CharacterContentModal id={idSelect} />
+				</Modal>
+			</>
 		</div>
 	);
 };

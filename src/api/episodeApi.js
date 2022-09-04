@@ -1,11 +1,11 @@
 import { api } from ".";
 
-const characterApi = api.injectEndpoints({
+const episodeApi = api.injectEndpoints({
 	endpoints: (build) => ({
-		getAllCharacters: build.query({
+		getAllEpisodes: build.query({
 			query: (params) => {
 				return {
-					url: `character`,
+					url: `episode`,
 					method: "GET",
 					params,
 				};
@@ -13,21 +13,21 @@ const characterApi = api.injectEndpoints({
 			providesTags: (result, error, id) => {
 				if (result?.results?.length > 0) {
 					return [
-						{ type: "Character", id: "LIST" },
+						{ type: "Episode", id: "LIST" },
 						...result.results.map((item) => ({
-							type: "Character",
+							type: "Episode",
 							id: item?.id,
 						})),
 					];
 				} else {
-					return [{ type: "Character", id: "LIST " }];
+					return [{ type: "Episode", id: "LIST " }];
 				}
 			},
 		}),
-		getCharacterDetail: build.query({
+		getEpisodeDetail: build.query({
 			query: ({ id }) => {
 				return {
-					url: `character/${id}`,
+					url: `episode/${id}`,
 					method: "GET",
 				};
 			},
@@ -35,5 +35,4 @@ const characterApi = api.injectEndpoints({
 	}),
 });
 
-export const { useGetAllCharactersQuery, useGetCharacterDetailQuery } =
-	characterApi;
+export const { useGetAllEpisodesQuery, useGetEpisodeDetailQuery } = episodeApi;

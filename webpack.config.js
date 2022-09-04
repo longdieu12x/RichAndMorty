@@ -51,12 +51,10 @@ module.exports = (env, agrv) => {
 		entry: "./src/index.jsx",
 		module: {
 			rules: [
-				// Nhận vào một array. Đây là nơi chứa các loader
 				{
-					test: /\.(js|jsx)$/, // Nhận vào một Regex để xác định kiểu file
-					exclude: /(node_modules|bower_components)/, //  Nhận vào một regex để loader loại trừ ra những file này
+					test: /\.(js|jsx)$/,
+					exclude: /(node_modules|bower_components)/,
 					use: {
-						// Nhận vào một object hoặc một array chứa thông tin loader
 						loader: "babel-loader",
 						options: {
 							presets: [
@@ -123,7 +121,7 @@ module.exports = (env, agrv) => {
 			},
 		},
 		output: {
-			path: path.resolve("build"),
+			path: path.resolve(__dirname, "build"),
 			publicPath: "/",
 			filename: "static/js/main.[contenthash:6].js",
 			environment: {
@@ -141,14 +139,13 @@ module.exports = (env, agrv) => {
 			static: "public",
 			port: 3000,
 			hot: true,
-			// watchContentBase: true,
-			// historyApiFallback: true,
+			historyApiFallback: true,
 			liveReload: false,
 			open: true,
 		},
 		plugins: isDev ? basePlugins : prodPlugins,
 		performance: {
-			maxEntrypointSize: 800000, //  Khi có 1 file build vượt quá giới hạn này (tính bằng byte) thì sẽ bị warning trên terminal.
+			maxEntrypointSize: 800000,
 		},
 	};
 };

@@ -23,11 +23,10 @@ body {
   overflow-y: scroll;
 }
 
-.ant-tabs-tab-btn {
-  color: white;
+button, [type=button], [type=reset], [type=submit] {
+  background-color: unset;
 }
 
-.ant-divider {
-  border-color: white;
+.ant-btn-primary {
+  background: #1890ff;
 }
-

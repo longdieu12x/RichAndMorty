@@ -22,6 +22,6 @@ const baseUrl = "https://rickandmortyapi.com/api/";
 export const api = createApi({
 	reducerPath: "api",
 	baseQuery: axiosBaseQuery({ baseUrl }),
-	tagTypes: ["Character"],
+	tagTypes: ["Character", "Location"],
 	endpoints: () => ({}),
 });
